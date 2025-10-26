@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📝 To-Do List App</title>
+
+  <style>
+    body {
+      font-family: "Poppins", Arial, sans-serif;
+      background: linear-gradient(135deg, #74b9ff, #a29bfe);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 10px;
+      flex-direction: column;
+    }
+
+    .container {
+      background: #fff;
+      padding: 25px 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      width: 380px;
+      max-width: 100%;
+      text-align: center;
+      transition: 0.3s ease;
+    }
+
+    h1 {
+      color: #2d3436;
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+
+    .input-section {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    #taskInput {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #dfe6e9;
+      border-radius: 8px;
+      outline: none;
+      font-size: 1rem;
+      transition: 0.2s;
+    }
+
+    #taskInput:focus {
+      border-color: #74b9ff;
+    }
+
+    #addBtn {
+      background-color: #00b894;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+
+    #addBtn:hover {
+      background-color: #019874;
+      transform: scale(1.05);
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      background: #f1f2f6;
+      margin: 8px 0;
+      padding: 10px 14px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.3s ease;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    li.done {
+      text-decoration: line-through;
+      color: gray;
+      background-color: #dcdde1;
+      transition: 0.3s;
+    }
+
+    .task-text {
+      flex: 1;
+      text-align: left;
+    }
+
+    .task-actions button {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 18px;
+      margin-left: 6px;
+      transition: 0.2s;
+    }
+
+    .task-actions button:hover {
+      transform: scale(1.3);
+    }
+
+    .check { color: #00b894; }
+    .edit { color: #0984e3; }
+    .delete { color: #d63031; }
+
+    .footer {
+      margin-top: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #636e72;
+    }
+
+    .clear-btn {
+      background-color: #e17055;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .clear-btn:hover {
+      background-color: #d63031;
+    }
+
+    .empty-message {
+      color: #636e72;
+      font-style: italic;
+      margin-top: 10px;
+    }
+
+    /* 💬 Feedback Button Style */
+    .feedback-btn {
+      display: inline-block;
+      background-color: #0984e3;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: 0.3s;
+      margin-top: 20px;
+    }
+
+    .feedback-btn:hover {
+      background-color: #74b9ff;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 To-Do List</h1>
+    <div class="input-section">
+      <input type="text" id="taskInput" placeholder="Enter a new task..." />
+      <button id="addBtn">Add</button>
+    </div>
+    <ul id="taskList"></ul>
+    <p id="emptyMessage" class="empty-message">No tasks yet — add something!</p>
+    <div class="footer">
+      <span id="taskCount">0 tasks</span>
+      <button class="clear-btn" id="clearAllBtn">Clear All</button>
+    </div>
+  </div>
+
+  <!-- 💬 Feedback Button -->
+  <div style="text-align:center;">
+    <!-- 👇 Replace the # below with your Google Form link -->
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLScXScykDmijGZuj-AKKxv_sD5PDrM59lAt6b-6hb7IEI8diMw/viewform?usp=publish-editor" target="_blank" class="feedback-btn">💬 Give Feedback</a>
+  </div>
+
+  <script>
+    const taskInput = document.getElementById('taskInput');
+    const addBtn = document.getElementById('addBtn');
+    const taskList = document.getElementById('taskList');
+    const taskCount = document.getElementById('taskCount');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const emptyMessage = document.getElementById('emptyMessage');
+
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    displayTasks();
+
+    addBtn.addEventListener('click', addTask);
+    taskInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') addTask();
+    });
+
+    function addTask() {
+      const text = taskInput.value.trim();
+      if (text === '') return alert('Please enter a task!');
+      tasks.push({ text, done: false });
+      taskInput.value = '';
+      saveTasks();
+      displayTasks();
+    }
+
+    function displayTasks() {
+      taskList.innerHTML = '';
+      emptyMessage.style.display = tasks.length === 0 ? 'block' : 'none';
+      tasks.forEach((task, i) => {
+        const li = document.createElement('li');
+        li.className = task.done ? 'done' : '';
+        li.innerHTML = `
+          <span class="task-text">${escapeHtml(task.text)}</span>
+          <div class="task-actions">
+            <button class="check" title="Done" onclick="markDone(${i})">✔</button>
+            <button class="edit" title="Edit" onclick="editTask(${i})">✎</button>
+            <button class="delete" title="Delete" onclick="deleteTask(${i})">🗑</button>
+          </div>
+        `;
+        taskList.appendChild(li);
+      });
+      taskCount.textContent = ${tasks.length} task${tasks.length !== 1 ? 's' : ''};
+    }
+
+    function markDone(i) {
+      tasks[i].done = !tasks[i].done;
+      saveTasks();
+      displayTasks();
+    }
+
+    function editTask(i) {
+      const newText = prompt('Edit task:', tasks[i].text);
+      if (newText !== null && newText.trim() !== '') {
+        tasks[i].text = newText.trim();
+        saveTasks();
+        displayTasks();
+      }
+    }
+
+    function deleteTask(i) {
+      if (confirm('Delete this task?')) {
+        tasks.splice(i, 1);
+        saveTasks();
+        displayTasks();
+      }
+    }
+
+    clearAllBtn.addEventListener('click', () => {
+      if (tasks.length && confirm('Clear all tasks?')) {
+        tasks = [];
+        saveTasks();
+        displayTasks();
+      }
+    });
+
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, t => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[t]
+      ));
+    }
+
+    window.markDone = markDone;
+    window.editTask = editTask;
+    window.deleteTask = deleteTask;
+  </script>
+</body>
+</html>
